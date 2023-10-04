@@ -19,36 +19,45 @@ logger = logging.getLogger(__name__)
 
 
 class WFLW_Dataset(Dataset):
-    def __init__(self, cfg, root, is_train, transform=None):
+    def __init__(self, cfg, root, is_train, transform=None,
+                 annotation_file=None,
+                 wflw_config=None):
         self.Image_size = cfg.MODEL.IMG_SIZE
         self.is_train = is_train
         self.root = root
-        self.number_landmarks = cfg.WFLW.NUM_POINT
+
+        if wflw_config is None:
+            wflw_config = cfg.WFLW
+
+        self.number_landmarks = wflw_config.NUM_POINT
         self.flip_index = np.genfromtxt(os.path.join(self.root, "Mirror.txt"),
                                         dtype=int, delimiter=',')
 
-        self.Fraction = cfg.WFLW.FRACTION
-        self.Translation_Factor = cfg.WFLW.TRANSLATION
-        self.Rotation_Factor = cfg.WFLW.ROTATION
-        self.Scale_Factor = cfg.WFLW.SCALE
-        self.Occlusion_Mean = cfg.WFLW.OCCLUSION_MEAN
-        self.Occlusion_Std = cfg.WFLW.OCCLUSION_STD
-        self.Flip = cfg.WFLW.FLIP
-        self.Occlusion = cfg.WFLW.OCCLUSION
-        self.Transfer = cfg.WFLW.CHANNEL_TRANSFER
+        self.Fraction = wflw_config.FRACTION
+        self.Translation_Factor = wflw_config.TRANSLATION
+        self.Rotation_Factor = wflw_config.ROTATION
+        self.Scale_Factor = wflw_config.SCALE
+        self.Occlusion_Mean = wflw_config.OCCLUSION_MEAN
+        self.Occlusion_Std = wflw_config.OCCLUSION_STD
+        self.Flip = wflw_config.FLIP
+        self.Occlusion = wflw_config.OCCLUSION
+        self.Transfer = wflw_config.CHANNEL_TRANSFER
 
         self.Heatmap_size = cfg.MODEL.HEATMAP
 
-        self.Data_Format = cfg.WFLW.DATA_FORMAT
+        self.Data_Format = wflw_config.DATA_FORMAT
 
         self.Transform = transform
 
-        if is_train:
-            self.annotation_file = os.path.join(root, 'WFLW_annotations', 'list_98pt_rect_attr_train_test',
-                                                'list_98pt_rect_attr_train.txt')
+        if annotation_file is None:
+            if is_train:
+                self.annotation_file = os.path.join(root, 'WFLW_annotations', 'list_98pt_rect_attr_train_test',
+                                                    'list_98pt_rect_attr_train.txt')
+            else:
+                self.annotation_file = os.path.join(root, 'WFLW_annotations', 'list_98pt_rect_attr_train_test',
+                                                    'list_98pt_rect_attr_test.txt')
         else:
-            self.annotation_file = os.path.join(root, 'WFLW_annotations', 'list_98pt_rect_attr_train_test',
-                                                'list_98pt_rect_attr_test.txt')
+            self.annotation_file = annotation_file
 
         self.database = self.get_file_information()
 

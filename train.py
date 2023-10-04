@@ -59,6 +59,11 @@ def main_function():
                                     cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                     cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
                                     cfg.TRANSFORMER.FEED_DIM, cfg.WFLW.INITIAL_PATH, cfg)
+    elif cfg.DATASET.DATASET == 'HEADCAM':
+        model = Sparse_alignment_network(cfg.HEADCAM.NUM_POINT, cfg.MODEL.OUT_DIM,
+                                         cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
+                                         cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
+                                         cfg.TRANSFORMER.FEED_DIM, cfg.HEADCAM.INITIAL_PATH, cfg)
     else:
         raise ValueError('Wrong Dataset')
 
@@ -108,6 +113,31 @@ def main_function():
                 normalize,
             ])
         )
+    elif cfg.DATASET.DATASET == 'HEADCAM':
+        train_dataset = WFLW_Dataset(
+            cfg, cfg.HEADCAM.ROOT, True,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file = os.path.join(cfg.HEADCAM.ROOT,
+                                           'HEADCAM_annotations', 'list_85pt_rect_attr_train_test',
+                                           'list_85pt_rect_attr_train.txt'),
+            wflw_config = cfg.HEADCAM,
+        )
+
+        valid_dataset = WFLW_Dataset(
+            cfg, cfg.HEADCAM.ROOT, False,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file = os.path.join(cfg.HEADCAM.ROOT,
+                                       'HEADCAM_annotations', 'list_85pt_rect_attr_train_test',
+                                       'list_85pt_rect_attr_test.txt'),
+            wflw_config=cfg.HEADCAM,
+        )
+
     else:
         raise ValueError('Wrong Dataset')
 
