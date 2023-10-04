@@ -148,6 +148,7 @@ def update_config(cfg, args):
 
     if args.dataDir:
         cfg.DATA_DIR = args.dataDir
+        cfg.WFLW.ROOT = os.path.join(cfg.DATA_DIR, 'WFLW')
 
     if args.target:
         cfg.TARGET = args.target
