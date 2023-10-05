@@ -68,7 +68,7 @@ def main_function():
     else:
         raise ValueError('Wrong Dataset')
 
-    initial_points = []
+    init_face = []
     for db_rec in train_dataset.database:
         # get bound box
         bbox = db_rec['bbox']
@@ -85,13 +85,24 @@ def main_function():
         landmarks = db_rec['point']
 
         landmarks_norm = ((landmarks - bbox_scaled[0:2]) / bbox_scaled[2:4]) * 256
-        initial_points.append(landmarks_norm)
+        init_face.append(landmarks_norm)
 
-    initial_points = np.array(initial_points)
-    initial_points = np.mean(initial_points, axis=0)
+    init_face = np.array(init_face)
+    init_face = np.mean(init_face, axis=0)
 
-    file_name = fr'X:\git\SLPT_Training\Config\init_{initial_points.shape[0]}.npz'
-    np.savez(file_name, initial_points)
+    import matplotlib.pyplot as plt
+    plt.scatter(init_face[:,0], init_face[:,1])
+    plt.show()
+
+    file_name = fr'X:\git\SLPT_Training\Config\init_{init_face.shape[0]}.npz'
+    np.savez(file_name, init_face=init_face)
+
+    # comparison_file_name = r'X:\git\SLPT_Training\Config\init_98.npz'
+    # init_face = np.load(comparison_file_name)['init_face']
+    #
+    # plt.scatter(init_face[:,0], init_face[:,1])
+    # plt.show()
+
     pass
 
 
