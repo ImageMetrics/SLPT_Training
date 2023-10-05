@@ -15,7 +15,7 @@ _C.PRINT_FREQ = 10
 
 _C.DATASET = CN()
 _C.DATASET.CHANNEL = 3
-_C.DATASET.DATASET = 'WFLW'
+_C.DATASET.DATASET = 'HEADCAM'
 
 _C.DEBUG = CN()
 _C.DEBUG.DEBUG = True
@@ -32,9 +32,9 @@ _C.MODEL.NAME = "Sparase_alignment"
 _C.MODEL.IMG_SIZE = 256
 _C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.PRETRAINED = None
-_C.MODEL.POINT_NUM = 98
+_C.MODEL.POINT_NUM = 85
 _C.MODEL.OUT_DIM = 256
-_C.MODEL.NUM_JOINTS = 98
+_C.MODEL.NUM_JOINTS = 85
 _C.MODEL.ITER_NUM = 1
 _C.MODEL.BACKBONE = 'resnet50'
 _C.MODEL.TRAINABLE = True
@@ -119,7 +119,7 @@ _C.HEADCAM.DATA_FORMAT = "RGB"
 _C.HEADCAM.FLIP = True
 _C.HEADCAM.CHANNEL_TRANSFER = False
 _C.HEADCAM.OCCLUSION = False
-_C.HEADCAM.INITIAL_PATH = './Config/init_98.npz'  # TODO
+_C.HEADCAM.INITIAL_PATH = './Config/init_85.npz'
 
 # High-Resoluion Net
 _C.MODEL.EXTRA = CN()
@@ -164,6 +164,7 @@ def update_config(cfg, args):
     if args.dataDir:
         cfg.DATA_DIR = args.dataDir
         cfg.WFLW.ROOT = os.path.join(cfg.DATA_DIR, 'WFLW')
+        cfg.HEADCAM.ROOT = os.path.join(cfg.DATA_DIR, 'HEADCAM')
 
     if args.target:
         cfg.TARGET = args.target

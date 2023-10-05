@@ -36,7 +36,7 @@ def main_function():
 
     if cfg.DATASET.DATASET == '300W':
         train_dataset = W300_Dataset(
-            cfg, cfg.W300.ROOT,  True,
+            cfg, cfg.W300.ROOT, True,
             transforms.Compose([
                 transforms.ToTensor(),
                 normalize,
@@ -59,10 +59,10 @@ def main_function():
                 transforms.ToTensor(),
                 normalize,
             ]),
-            annotation_file = os.path.join(cfg.HEADCAM.ROOT,
-                                           'HEADCAM_annotations', 'list_85pt_rect_attr_train_test',
-                                           'list_85pt_rect_attr_train.txt'),
-            wflw_config = cfg.HEADCAM,
+            annotation_file=os.path.join(cfg.HEADCAM.ROOT,
+                                         'HEADCAM_annotations', 'list_85pt_rect_attr_train_test',
+                                         'list_85pt_rect_attr_train.txt'),
+            wflw_config=cfg.HEADCAM,
         )
 
     else:
@@ -75,10 +75,10 @@ def main_function():
 
         # scale up by average factor
         scale_fac = train_dataset.Fraction
-        center_point = bbox[0:2] + (bbox[2:4]/2)
+        center_point = bbox[0:2] + (bbox[2:4] / 2)
         wh_scaled = bbox[2:4] * scale_fac
         bbox_scaled = bbox
-        bbox_scaled[0:2] = center_point - (wh_scaled*0.5)
+        bbox_scaled[0:2] = center_point - (wh_scaled * 0.5)
         bbox_scaled[2:4] = wh_scaled
 
         # now align points within this box and scale by 256

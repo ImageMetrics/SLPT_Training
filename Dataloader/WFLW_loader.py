@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class WFLW_Dataset(Dataset):
-    def __init__(self, cfg, root, is_train, transform=None,
+    def __init__(self, cfg, root, is_train,
+                 transform=None,
                  annotation_file=None,
                  wflw_config=None):
         self.Image_size = cfg.MODEL.IMG_SIZE
