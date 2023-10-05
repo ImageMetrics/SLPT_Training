@@ -92,6 +92,7 @@ def main_function():
 
     import matplotlib.pyplot as plt
     plt.scatter(init_face[:,0], init_face[:,1])
+    plt.scatter(init_face[[26, 28],0], init_face[[26, 28],1], c='r')  # eye points
     plt.show()
 
     file_name = fr'X:\git\SLPT_Training\Config\init_{init_face.shape[0]}.npz'
