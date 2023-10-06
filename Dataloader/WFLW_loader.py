@@ -47,6 +47,7 @@ class WFLW_Dataset(Dataset):
         self.Heatmap_size = cfg.MODEL.HEATMAP
 
         self.Data_Format = wflw_config.DATA_FORMAT
+        self.image_dir = wflw_config.IMAGE_DIR
 
         self.Transform = transform
 
@@ -79,7 +80,7 @@ class WFLW_Dataset(Dataset):
             min_index = np.min(point_coord, axis=0)
             temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
                                  max_index[1] - min_index[1]])
-            temp_name = os.path.join(self.root, 'WFLW_images', temp_info[-1])
+            temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
             Data_base.append({'Img': temp_name,
                               'bbox': temp_box,
                               'point': point_coord})
