@@ -147,7 +147,7 @@ def main_function():
         shuffle=cfg.TRAIN.SHUFFLE,
         num_workers=cfg.WORKERS,
         pin_memory=cfg.PIN_MEMORY,
-        persistent_workers=True,
+        persistent_workers=cfg.WORKERS > 0,
     )
 
     valid_loader = torch.utils.data.DataLoader(
@@ -156,7 +156,7 @@ def main_function():
         shuffle=False,
         num_workers=cfg.WORKERS,
         pin_memory=cfg.PIN_MEMORY,
-        persistent_workers=True,
+        persistent_workers=cfg.WORKERS > 0,
     )
 
     best_perf = 100.0
