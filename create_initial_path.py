@@ -77,6 +77,7 @@ def main_function():
         scale_fac = train_dataset.Fraction
         center_point = bbox[0:2] + (bbox[2:4] / 2)
         wh_scaled = bbox[2:4] * scale_fac
+        wh_scaled[:] = np.max(wh_scaled)
         bbox_scaled = bbox
         bbox_scaled[0:2] = center_point - (wh_scaled * 0.5)
         bbox_scaled[2:4] = wh_scaled
