@@ -253,98 +253,14 @@ class WFLWCal_Dataset(WFLW_Dataset):
         return Data_base
 
     def __getitem__(self, idx):
-        db_slic = copy.deepcopy(self.database[idx])
-        Img_path = db_slic['Img']
-        BBox = db_slic['bbox']
-        Points = db_slic['point']
-        Annotated_Points = Points.copy()
+        input, meta = super().__getitem__(idx)
 
-        Img = cv2.imread(Img_path)
+        tmp = self.database
+        is_train = self.is_train
+        self.database = self.calibration_database
+        self.is_train = False
+        input_cal, meta_cal = super().__getitem__(idx)
+        self.database = tmp
+        self.is_train = is_train
 
-        Img_shape = Img.shape
-        Img = cv2.cvtColor(Img, cv2.COLOR_RGB2BGR)
-        if len(Img_shape) < 3:
-            Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2RGB)
-        else:
-            if Img_shape[2] == 4:
-                Img = cv2.cvtColor(Img, cv2.COLOR_RGBA2RGB)
-            elif Img_shape[2] == 1:
-                Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2RGB)
-
-        if self.is_train == True:
-            Rotation_Factor = self.Rotation_Factor * np.pi / 180.0
-            Scale_Factor = self.Scale_Factor
-            Translation_X_Factor = self.Translation_Factor
-            Translation_Y_Factor = self.Translation_Factor
-
-            angle = np.clip(np.random.normal(0, Rotation_Factor), -2 * Rotation_Factor, 2 * Rotation_Factor)
-            Scale = np.clip(np.random.normal(self.Fraction, Scale_Factor), self.Fraction - Scale_Factor, self.Fraction + Scale_Factor)
-
-            Translation_X = np.clip(np.random.normal(0, Translation_X_Factor), -Translation_X_Factor, Translation_X_Factor)
-            Translation_Y = np.clip(np.random.normal(0, Translation_Y_Factor), -Translation_Y_Factor, Translation_Y_Factor)
-
-            trans = utils.get_transforms(BBox, Scale, angle, self.Image_size, shift_factor=[Translation_X, Translation_Y])
-
-            input = cv2.warpAffine(Img, trans, (int(self.Image_size), int(self.Image_size)), flags=cv2.INTER_LINEAR)
-
-            for i in range(self.number_landmarks):
-                Points[i,0:2] = utils.affine_transform(Points[i,0:2], trans)
-
-            if self.Flip is True:
-                Flip_Flag = np.random.randint(0, 2)
-                if Flip_Flag == 1:
-                    input, Points = self.Image_Flip(input, Points)
-
-            if self.Transfer is True:
-                Transfer_Flag = np.random.randint(0, 5)
-                input = self.Channel_Transfer(input, Transfer_Flag)
-
-            if self.Occlusion is True:
-                Occlusion_Flag = np.random.randint(0, 2)
-                if Occlusion_Flag == 1:
-                    input = self.Create_Occlusion(input)
-
-            if self.Transform is not None:
-                input = self.Transform(input)
-
-
-
-            meta = {'Img_path': Img_path,
-                    'Points': Points / (self.Image_size),
-                    'BBox': BBox,
-                    'trans': trans,
-                    'Scale': Scale,
-                    'angle': angle,
-                    'Translation': [Translation_X, Translation_Y]}
-
-            return input, meta
-
-        else:
-            trans = utils.get_transforms(BBox, self.Fraction, 0.0, self.Image_size, shift_factor=[0.0, 0.0])
-
-            input = cv2.warpAffine(Img, trans, (int(self.Image_size), int(self.Image_size)), flags=cv2.INTER_LINEAR)
-
-            for i in range(self.number_landmarks):
-                Points[i, 0:2] = utils.affine_transform(Points[i, 0:2], trans)
-
-            meta = {
-                "Annotated_Points": Annotated_Points,
-                'Img_path': Img_path,
-                'Points': Points / (self.Image_size),
-                'BBox': BBox,
-                'trans': trans,
-                'Scale': self.Fraction,
-                'angle': 0.0,
-                'Translation': [0.0, 0.0],
-            }
-
-            # target = np.zeros((self.number_landmarks, self.Heatmap_size, self.Heatmap_size))
-            # tpts = Points / (self.Image_size - 1) * (self.Heatmap_size - 1)
-            # for i in range(self.number_landmarks):
-            #     if tpts[i, 1] > 0:
-            #         target[i] = generate_target(target[i], tpts[i], self.sigma)
-
-            if self.Transform is not None:
-                input = self.Transform(input)
-
-            return input, meta
+        return input, meta

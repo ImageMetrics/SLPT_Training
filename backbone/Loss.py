@@ -6,7 +6,7 @@ import torch.nn as nn
 class Alignment_Loss(nn.Module):
     def __init__(self, cfg):
         super(Alignment_Loss, self).__init__()
-        self.num_point = cfg.WFLW.NUM_POINT
+        # self.num_point = cfg.WFLW.NUM_POINT
         self.flag = cfg.DATASET.DATASET
 
     def forward(self, input_tensor, ground_truth):

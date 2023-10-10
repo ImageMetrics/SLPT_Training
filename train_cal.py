@@ -1,7 +1,7 @@
 import argparse
 
-from Config import cfg
-from Config import update_config
+from Config.default_cal import _C as cfg
+from Config.default_cal import update_config
 
 from utils import create_logger
 from utils import save_checkpoint
