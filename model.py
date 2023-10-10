@@ -123,3 +123,6 @@ class Sparse_alignment_network(nn.Module):
         return output_list
 
 
+class Sparse_alignment_network_cal(Sparse_alignment_network):
+    def __init__(self, *args):
+        super().__init__(*args)
