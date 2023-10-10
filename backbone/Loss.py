@@ -18,7 +18,7 @@ class Alignment_Loss(nn.Module):
             L2_norm = torch.norm(ground_truth[:, :, 36, :] - ground_truth[:, :, 45, :], dim=2)
         elif self.flag == 'COFW':
             L2_norm = torch.norm(ground_truth[:, :, 8, :] - ground_truth[:, :, 9, :], dim=2)
-        elif self.flag == 'HEADCAM':
+        elif self.flag == 'HEADCAM' or self.flag == 'HEADCAMCAL':
             L2_norm = torch.norm(ground_truth[:, :, 28, :] - ground_truth[:, :, 26, :], dim=2)
         L2_Loss = L2_Loss / L2_norm
         return torch.mean(L2_Loss)

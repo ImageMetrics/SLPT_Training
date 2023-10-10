@@ -9,8 +9,8 @@ from model import Sparse_alignment_network_cal
 from Dataloader.WFLW_loader import WFLWCal_Dataset
 from backbone import Alignment_Loss
 from utils import get_optimizer
-from tools import train
-from tools import validate
+from tools.train_function import train_cal
+from tools.validate_function import validate_cal
 
 from tensorboardX import SummaryWriter
 
@@ -152,9 +152,9 @@ def main_function():
     )
 
     for epoch in range(begin_epoch, begin_epoch + cfg.TRAIN.NUM_EPOCH):
-        train(cfg, train_loader, model, loss_function_2, optimizer, epoch,
+        train_cal(cfg, train_loader, model, loss_function_2, optimizer, epoch,
               final_output_dir, writer_dict)
-        perf_indicator = validate(
+        perf_indicator = validate_cal(
             cfg, valid_loader, model, loss_function_2, final_output_dir, writer_dict
         )
 

@@ -263,4 +263,4 @@ class WFLWCal_Dataset(WFLW_Dataset):
         self.database = tmp
         self.is_train = is_train
 
-        return input, meta
+        return input, input_cal, meta, meta_cal
