@@ -126,17 +126,17 @@ _C.MODEL.EXTRA.STAGE4.FUSE_METHOD = 'SUM'
 def update_config(cfg, args):
     cfg.defrost()
 
-    if args.modelDir:
+    if hasattr(args, 'modelDir') and args.modelDir:
         cfg.OUTPUT_DIR = args.modelDir
 
-    if args.logDir:
+    if hasattr(args, 'logDir') and args.logDir:
         cfg.LOG_DIR = args.logDir
 
     if args.dataDir:
         cfg.DATA_DIR = args.dataDir
         cfg.HEADCAMCAL.ROOT = os.path.join(cfg.DATA_DIR, 'HEADCAMCAL')
 
-    if args.target:
+    if hasattr(args, 'target') and args.target:
         cfg.TARGET = args.target
 
     if cfg.MODEL.PRETRAINED is not None:
