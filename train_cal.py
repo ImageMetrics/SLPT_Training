@@ -44,7 +44,13 @@ def main_function():
     logger.info(pprint.pformat(args))
     logger.info(cfg)
 
-  
+    # for development
+    import socket
+    if socket.gethostname() == 'IMLAP64':
+        cfg.defrost()
+        cfg.WORKERS = 0
+        cfg.TRAIN.BATCH_SIZE_PER_GPU = 2
+
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
     torch.backends.cudnn.enabled = cfg.CUDNN.ENABLED

@@ -10,7 +10,7 @@ _C = CN()
 _C.GPUS = (0, )
 _C.WORKERS = 8
 _C.PIN_MEMORY = True
-_C.AUTO_RESUME = True
+_C.AUTO_RESUME = False
 _C.PRINT_FREQ = 10
 
 _C.DATASET = CN()
