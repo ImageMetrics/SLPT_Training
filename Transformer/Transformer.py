@@ -192,3 +192,40 @@ class Transformer(nn.Module):
         tgt = self.Transformer_block(tgt, src, pos=structure_encoding, query_pos=landmark_query)
 
         return tgt.permute(2, 0, 1, 3)
+
+
+class TransformerCal(Transformer):
+    def __init__(self, num_points, d_model=256, nhead=8, num_decoder_layer=6, dim_feedforward=1024,
+                 dropout=0.1, activation="relu", normalize_before=True):
+        super().__init__(num_points, d_model=d_model, nhead=nhead,
+                         num_decoder_layer=num_decoder_layer, dim_feedforward=dim_feedforward,
+                         dropout=dropout, activation=activation, normalize_before=normalize_before)
+        # calibration encoding
+        self.calibration_encoding = nn.Parameter(torch.randn(1, num_points, self.d_model))
+
+        # SLPT_Inherent_Layer = Inherent_Layer(d_model, nhead, dim_feedforward, dropout,
+        #                                             activation, normalize_before)
+        # decoder_norm = nn.LayerNorm(d_model)
+        # self.Transformer_block = Transformer_block(SLPT_Inherent_Layer, num_decoder_layer, decoder_norm, return_intermediate=True)
+
+        self._reset_parameters()
+
+    def forward(self, src, cal):
+        bs, num_feat, len_feat = src.size()
+
+        structure_encoding = self.structure_encoding.repeat(bs, 1, 1).permute(1, 0, 2)
+        calibration_encoding = self.calibration_encoding.repeat(bs, 1, 1).permute(1, 0, 2)
+        landmark_query = self.landmark_query.repeat(bs, 1, 1).permute(1, 0, 2)
+
+        src = src.permute(1, 0, 2)
+        cal = cal.permute(1, 0, 2)
+
+        src_cal = torch.cat((src, cal), dim=0)
+        src_cal_encoding = torch.cat((structure_encoding, calibration_encoding), dim=0)
+
+        tgt = torch.zeros_like(landmark_query)
+        tgt = self.Transformer_block(tgt, src_cal,
+                                     pos=src_cal_encoding,
+                                     query_pos=landmark_query)
+
+        return tgt.permute(2, 0, 1, 3)

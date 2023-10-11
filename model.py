@@ -123,15 +123,27 @@ class Sparse_alignment_network(nn.Module):
         return output_list
 
 
+from Transformer.Transformer import TransformerCal
+
+
 class Sparse_alignment_network_cal(Sparse_alignment_network):
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, num_point, d_model, trainable,
+                 return_interm_layers, dilation, nhead,  feedforward_dim,
+                 initial_path, cfg):
+        super().__init__(num_point, d_model, trainable,
+                 return_interm_layers, dilation, nhead,  feedforward_dim,
+                 initial_path, cfg)
 
-        self.cal_method = 'concat' # can be 'concat', 'subtract'
+        # Transformer
+        self.Transformer = TransformerCal(num_point, d_model, nhead, cfg.TRANSFORMER.NUM_DECODER,
+                                       feedforward_dim, dropout=0.1)
 
-        # modifications for concatenated calibration
-        if self.cal_method == 'concat':
-            self.feature_extractor = nn.Conv2d(self.d_model * 2, self.d_model, kernel_size=self.Sample_num, bias=False)
+        self.feature_extractor_cal = nn.Conv2d(d_model, d_model, kernel_size=self.Sample_num, bias=False)
+
+        self._reset_parameters()
+
+        # backbone
+        self.backbone = get_face_alignment_net(cfg)
 
     def forward(self, image, cal_image, cal_landmarks):
 
@@ -174,16 +186,10 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         ROI_feature_1 = ROI_feature_1.view(bs * self.num_point, self.Sample_num, self.Sample_num,
                                      self.d_model).permute(0, 3, 2, 1)
 
-        if self.cal_method == 'subtract':
-            # subtracted calibration
-            transformer_feature_1 = self.feature_extractor(ROI_feature_1-ROI_feature_cal_1).view(bs, self.num_point, self.d_model)
-        elif self.cal_method == 'concat':
-            # concatenated calibration
-            transformer_feature_1 = self.feature_extractor(
-                torch.cat((ROI_feature_1,ROI_feature_cal_1), dim=1)
-            ).view(bs, self.num_point, self.d_model)
+        transformer_feature_1 = self.feature_extractor(ROI_feature_1).view(bs, self.num_point, self.d_model)
+        transformer_feature_cal_1 = self.feature_extractor_cal(ROI_feature_cal_1).view(bs, self.num_point, self.d_model)
 
-        offset_1 = self.Transformer(transformer_feature_1)
+        offset_1 = self.Transformer(transformer_feature_1, transformer_feature_cal_1)
         offset_1 = self.out_layer(offset_1)
 
         landmarks_1 = start_anchor_1.unsqueeze(1) + bbox_size_1.unsqueeze(1) * offset_1
@@ -197,17 +203,10 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         ROI_feature_2 = ROI_feature_2.view(bs * self.num_point, self.Sample_num, self.Sample_num,
                                            self.d_model).permute(0, 3, 2, 1)
 
-        if self.cal_method == 'subtract':
-            # subtracted calibration
-            transformer_feature_2 = self.feature_extractor(ROI_feature_2 - ROI_feature_cal_2).view(bs, self.num_point,
-                                                                                                   self.d_model)
-        elif self.cal_method == 'concat':
-            # concatenated calibration
-            transformer_feature_2 = self.feature_extractor(
-                torch.cat((ROI_feature_2,ROI_feature_cal_2), dim=1)
-            ).view(bs, self.num_point, self.d_model)
+        transformer_feature_2 = self.feature_extractor(ROI_feature_2).view(bs, self.num_point, self.d_model)
+        transformer_feature_cal_2 = self.feature_extractor_cal(ROI_feature_cal_2).view(bs, self.num_point, self.d_model)
 
-        offset_2 = self.Transformer(transformer_feature_2)
+        offset_2 = self.Transformer(transformer_feature_2, transformer_feature_cal_2)
         offset_2 = self.out_layer(offset_2)
 
         landmarks_2 = start_anchor_2.unsqueeze(1) + bbox_size_2.unsqueeze(1) * offset_2
@@ -221,17 +220,10 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         ROI_feature_3 = ROI_feature_3.view(bs * self.num_point, self.Sample_num, self.Sample_num,
                                            self.d_model).permute(0, 3, 2, 1)
 
-        if self.cal_method == 'subtract':
-            # subtracted calibration
-            transformer_feature_3 = self.feature_extractor(ROI_feature_3 - ROI_feature_cal_3).view(bs, self.num_point,
-                                                                                                   self.d_model)
-        elif self.cal_method == 'concat':
-            # concatenated calibration
-            transformer_feature_3 = self.feature_extractor(
-                torch.cat((ROI_feature_3,ROI_feature_cal_3), dim=1)
-            ).view(bs, self.num_point, self.d_model)
+        transformer_feature_3 = self.feature_extractor(ROI_feature_3).view(bs, self.num_point, self.d_model)
+        transformer_feature_cal_3 = self.feature_extractor_cal(ROI_feature_cal_3).view(bs, self.num_point, self.d_model)
 
-        offset_3 = self.Transformer(transformer_feature_3)
+        offset_3 = self.Transformer(transformer_feature_3, transformer_feature_cal_3)
         offset_3 = self.out_layer(offset_3)
 
         landmarks_3 = start_anchor_3.unsqueeze(1) + bbox_size_3.unsqueeze(1) * offset_3
