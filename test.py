@@ -24,12 +24,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train Sparse Facial Network')
 
     # philly
-    parser.add_argument('--modelDir', help='model directory', type=str, default='./Checkpoint')
-    parser.add_argument('--logDir', help='log directory', type=str, default='./log')
     parser.add_argument('--dataDir', help='data directory', type=str, default='./')
-    parser.add_argument('--target', help='targeted branch (alignmengt, emotion or pose)',
-                        type=str, default='alignment')
-    parser.add_argument('--prevModelDir', help='prev Model directory', type=str, default=None)
+    parser.add_argument('--checkpoint', help='checkpoint file', type=str, default='./WFLW_6_layer.pth')
 
     args = parser.parse_args()
 
@@ -45,6 +41,8 @@ def calcuate_loss(name, pred, gt, trans):
         norm = np.linalg.norm(gt[36, :] - gt[45, :])
     elif name == 'COFW':
         norm = np.linalg.norm(gt[17, :] - gt[16, :])
+    elif name == 'HEADCAM':
+        norm = np.linalg.norm(gt[28, :] - gt[26, :])
     else:
         raise ValueError('Wrong Dataset')
 
@@ -55,9 +53,6 @@ def calcuate_loss(name, pred, gt, trans):
 def main_function():
     args = parse_args()
     update_config(cfg, args)
-    logger, final_output_dir, tb_log_dir = create_logger(cfg, cfg.TARGET)
-    logger.info(pprint.pformat(args))
-    logger.info(cfg)
 
     torch.backends.cudnn.benchmark = cfg.CUDNN.BENCHMARK
     torch.backends.cudnn.deterministic = cfg.CUDNN.DETERMINISTIC
@@ -73,15 +68,13 @@ def main_function():
                                     cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                     cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
                                     cfg.TRANSFORMER.FEED_DIM, cfg.WFLW.INITIAL_PATH, cfg)
+    elif cfg.DATASET.DATASET == 'HEADCAM':
+        model = Sparse_alignment_network(cfg.HEADCAM.NUM_POINT, cfg.MODEL.OUT_DIM,
+                                         cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
+                                         cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
+                                         cfg.TRANSFORMER.FEED_DIM, cfg.HEADCAM.INITIAL_PATH, cfg)
 
     model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
-
-    writer_dict = {
-        'writer': SummaryWriter(log_dir=tb_log_dir),
-        'train_global_steps': 0,
-        'valid_global_steps': 0,
-    }
-
 
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -103,6 +96,18 @@ def main_function():
                 normalize,
             ])
         )
+    elif cfg.DATASET.DATASET == 'HEADCAM':
+        valid_dataset = WFLW_Dataset(
+            cfg, cfg.HEADCAM.ROOT, False,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file=os.path.join(cfg.HEADCAM.ROOT,
+                                         'HEADCAM_annotations', 'list_85pt_rect_attr_train_test',
+                                         'list_85pt_rect_attr_test.txt'),
+            wflw_config=cfg.HEADCAM,
+        )
     else:
         raise ValueError('Wrong Dataset')
 
@@ -115,8 +120,7 @@ def main_function():
         pin_memory=cfg.PIN_MEMORY
     )
 
-    checkpoint_file = "./WFLW_6_layer.pth"
-    checkpoint = torch.load(checkpoint_file)
+    checkpoint = torch.load(args.checkpoint)
 
     model.module.load_state_dict(checkpoint)
 

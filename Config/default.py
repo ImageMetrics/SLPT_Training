@@ -157,10 +157,10 @@ _C.MODEL.EXTRA.STAGE4.FUSE_METHOD = 'SUM'
 def update_config(cfg, args):
     cfg.defrost()
 
-    if args.modelDir:
+    if hasattr(args, 'modelDir') and args.modelDir:
         cfg.OUTPUT_DIR = args.modelDir
 
-    if args.logDir:
+    if hasattr(args, 'logDir') and args.logDir:
         cfg.LOG_DIR = args.logDir
 
     if args.dataDir:
@@ -168,7 +168,7 @@ def update_config(cfg, args):
         cfg.WFLW.ROOT = os.path.join(cfg.DATA_DIR, 'WFLW')
         cfg.HEADCAM.ROOT = os.path.join(cfg.DATA_DIR, 'HEADCAM')
 
-    if args.target:
+    if hasattr(args, 'target') and args.target:
         cfg.TARGET = args.target
 
 
