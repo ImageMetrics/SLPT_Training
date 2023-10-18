@@ -41,7 +41,7 @@ def calcuate_loss(name, pred, gt, trans):
         norm = np.linalg.norm(gt[36, :] - gt[45, :])
     elif name == 'COFW':
         norm = np.linalg.norm(gt[17, :] - gt[16, :])
-    elif name == 'HEADCAM':
+    elif name == 'HEADCAM' or name == 'HEADCAMCAL':
         norm = np.linalg.norm(gt[28, :] - gt[26, :])
     else:
         raise ValueError('Wrong Dataset')
@@ -68,7 +68,7 @@ def main_function():
                                     cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                     cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
                                     cfg.TRANSFORMER.FEED_DIM, cfg.WFLW.INITIAL_PATH, cfg)
-    elif cfg.DATASET.DATASET == 'HEADCAM':
+    elif cfg.DATASET.DATASET == 'HEADCAM' or cfg.DATASET.DATASET == 'HEADCAMCAL':
         model = Sparse_alignment_network(cfg.HEADCAM.NUM_POINT, cfg.MODEL.OUT_DIM,
                                          cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                          cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
@@ -108,6 +108,22 @@ def main_function():
                                          'list_85pt_rect_attr_test.txt'),
             wflw_config=cfg.HEADCAM,
         )
+    elif cfg.DATASET.DATASET == 'HEADCAMCAL':
+        from Dataloader.WFLW_loader import WFLWCal_Dataset
+        valid_dataset = WFLWCal_Dataset(
+            cfg, cfg.HEADCAMCAL.ROOT, False,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file=os.path.join(cfg.HEADCAMCAL.ROOT,
+                                         'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                         'list_85pt_rect_attr_test.txt'),
+            calibration_annotation_file=os.path.join(cfg.HEADCAMCAL.ROOT,
+                                                     'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                                     'list_85pt_rect_attr_calibration_test.txt'),
+            wflw_config=cfg.HEADCAMCAL,
+        )
     else:
         raise ValueError('Wrong Dataset')
 
@@ -130,7 +146,11 @@ def main_function():
     model.eval()
 
     with torch.no_grad():
-        for i, (input, meta) in enumerate(valid_loader):
+        for i, data in enumerate(valid_loader):
+            if cfg.DATASET.DATASET == 'HEADCAMCAL':
+                input, _, meta, _ = data
+            else:
+                input, meta = data
             Annotated_Points = meta['Annotated_Points'].numpy()[0]
             Trans = meta['trans'].numpy()[0]
 
