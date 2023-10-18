@@ -59,7 +59,7 @@ def main_function():
                                     cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                     cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
                                     cfg.TRANSFORMER.FEED_DIM, cfg.WFLW.INITIAL_PATH, cfg)
-    elif cfg.DATASET.DATASET == 'HEADCAM':
+    elif cfg.DATASET.DATASET == 'HEADCAM' or cfg.DATASET.DATASET == 'HEADCAMCAL':
         model = Sparse_alignment_network(cfg.HEADCAM.NUM_POINT, cfg.MODEL.OUT_DIM,
                                          cfg.MODEL.TRAINABLE, cfg.MODEL.INTER_LAYER,
                                          cfg.MODEL.DILATION, cfg.TRANSFORMER.NHEAD,
@@ -137,7 +137,38 @@ def main_function():
                                        'list_85pt_rect_attr_test.txt'),
             wflw_config=cfg.HEADCAM,
         )
+    elif cfg.DATASET.DATASET == 'HEADCAMCAL':
+        from Dataloader.WFLW_loader import WFLWCal_Dataset
 
+        train_dataset = WFLWCal_Dataset(
+            cfg, cfg.HEADCAMCAL.ROOT, True,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file = os.path.join(cfg.HEADCAMCAL.ROOT,
+                                           'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                           'list_85pt_rect_attr_train.txt'),
+            calibration_annotation_file=os.path.join(cfg.HEADCAMCAL.ROOT,
+                                                     'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                                     'list_85pt_rect_attr_calibration_train.txt'),
+            wflw_config = cfg.HEADCAMCAL,
+        )
+
+        valid_dataset = WFLWCal_Dataset(
+            cfg, cfg.HEADCAMCAL.ROOT, False,
+            transforms.Compose([
+                transforms.ToTensor(),
+                normalize,
+            ]),
+            annotation_file=os.path.join(cfg.HEADCAMCAL.ROOT,
+                                         'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                         'list_85pt_rect_attr_test.txt'),
+            calibration_annotation_file=os.path.join(cfg.HEADCAMCAL.ROOT,
+                                                     'HEADCAMCAL_annotations', 'list_85pt_rect_attr_train_test',
+                                                     'list_85pt_rect_attr_calibration_test.txt'),
+            wflw_config=cfg.HEADCAMCAL,
+        )
     else:
         raise ValueError('Wrong Dataset')
 

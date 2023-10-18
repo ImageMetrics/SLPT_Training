@@ -23,7 +23,12 @@ def train(config, train_loader, model, loss_function, optimizer, epoch, output_d
 
     end = time.time()
 
-    for i, (input, meta) in enumerate(train_loader):
+    for i, data in enumerate(train_loader):
+        if config.DATASET.DATASET == 'HEADCAMCAL':
+            input, _, meta, _ = data
+        else:
+            input, meta = data
+
         data_time.update(time.time() - end)
         ground_truth = meta['Points'].cuda().float()
         landmarks = model(input)

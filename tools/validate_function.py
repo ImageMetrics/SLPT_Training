@@ -21,7 +21,12 @@ def validate(config, val_loader, model, loss_function, output_dir, writer_dict=N
 
     with torch.no_grad():
         end = time.time()
-        for i, (input, meta) in enumerate(val_loader):
+        for i, data in enumerate(val_loader):
+            if config.DATASET.DATASET == 'HEADCAMCAL':
+                input, _, meta, _ = data
+            else:
+                input, meta = data
+
             landmarks = model(input)
             ground_truth = meta['Points'].cuda().float()
 
