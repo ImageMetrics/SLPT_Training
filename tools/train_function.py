@@ -77,12 +77,16 @@ def train(config, train_loader, model, loss_function, optimizer, epoch, output_d
             # prefix = '{}_{}'.format(os.path.join(output_dir, 'train'), i)
 
 
-def train_cal(config, train_loader, model, loss_function, optimizer, epoch, output_dir, writer_dict):
+def train_cal(config, train_loader, model, loss_function, consistency_loss_function,
+              optimizer, epoch, output_dir, writer_dict):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     NME_stage1 = AverageMeter()
     NME_stage2 = AverageMeter()
     NME_stage3 = AverageMeter()
+    consistency_stage1 = AverageMeter()
+    consistency_stage2 = AverageMeter()
+    consistency_stage3 = AverageMeter()
     loss_average = AverageMeter()
 
     model.train()
@@ -95,17 +99,23 @@ def train_cal(config, train_loader, model, loss_function, optimizer, epoch, outp
         calibration_points = meta_cal['Points'].cuda().float()
         landmarks = model(input, input_cal, calibration_points)
 
+        R_loss_1 = loss_function(landmarks[0], ground_truth)
+        R_loss_2 = loss_function(landmarks[1], ground_truth, feature_map)
+        R_loss_3 = loss_function(landmarks[2], ground_truth, feature_map)
+
+        loss = 0.2 * R_loss_1 + 0.3 * R_loss_2 + 0.5 * R_loss_3
+
         feature_map = model.module.backbone(input.cuda())
         calibration_feature_map = model.module.backbone(input_cal.cuda())
 
-        R_loss_1 = loss_function(landmarks[0], ground_truth, feature_map,
+        consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
                                  calibration_feature_map, calibration_points, model.module, stage=1)
-        R_loss_2 = loss_function(landmarks[1], ground_truth, feature_map,
+        consistency_loss_2 = consistency_loss_function(landmarks[1], ground_truth, feature_map,
                                  calibration_feature_map, calibration_points, model.module, stage=2)
-        R_loss_3 = loss_function(landmarks[2], ground_truth, feature_map,
+        consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
                                  calibration_feature_map, calibration_points, model.module, stage=3)
 
-        loss = 0.2 * R_loss_1 + 0.3 * R_loss_2 + 0.5 * R_loss_3
+        loss += 1e3 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
         optimizer.zero_grad()
         loss.backward()
@@ -114,6 +124,10 @@ def train_cal(config, train_loader, model, loss_function, optimizer, epoch, outp
         NME_stage1.update(R_loss_1.item(), input.size(0))
         NME_stage2.update(R_loss_2.item(), input.size(0))
         NME_stage3.update(R_loss_3.item(), input.size(0))
+
+        consistency_stage1.update(consistency_loss_1.item(), input.size(0))
+        consistency_stage2.update(consistency_loss_2.item(), input.size(0))
+        consistency_stage3.update(consistency_loss_3.item(), input.size(0))
 
         loss_average.update(loss.item(), input.size(0))
 
@@ -140,6 +154,9 @@ def train_cal(config, train_loader, model, loss_function, optimizer, epoch, outp
             writer.add_scalar('NME1', NME_stage1.val, global_steps)
             writer.add_scalar('NME2', NME_stage2.val, global_steps)
             writer.add_scalar('NME3', NME_stage3.val, global_steps)
+            writer.add_scalar('consistency1', consistency_stage1.val, global_steps)
+            writer.add_scalar('consistency2', consistency_stage2.val, global_steps)
+            writer.add_scalar('consistency3', consistency_stage3.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
             # prefix = '{}_{}'.format(os.path.join(output_dir, 'train'), i)

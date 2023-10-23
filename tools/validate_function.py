@@ -9,6 +9,7 @@ from backbone import Backbone
 
 logger = logging.getLogger(__name__)
 
+
 def validate(config, val_loader, model, loss_function, output_dir, writer_dict=None,
              edge_criterion=None):
     batch_time = AverageMeter()
@@ -78,13 +79,16 @@ def validate(config, val_loader, model, loss_function, output_dir, writer_dict=N
         return NME_stage3.avg
 
 
-def validate_cal(config, val_loader, model, loss_function, output_dir, writer_dict=None,
-             edge_criterion=None):
+def validate_cal(config, val_loader, model, loss_function, consistency_loss_function,
+                 output_dir, writer_dict=None, edge_criterion=None):
     batch_time = AverageMeter()
     loss_average = AverageMeter()
     NME_stage1 = AverageMeter()
     NME_stage2 = AverageMeter()
     NME_stage3 = AverageMeter()
+    consistency_stage1 = AverageMeter()
+    consistency_stage2 = AverageMeter()
+    consistency_stage3 = AverageMeter()
 
     model.eval()
 
@@ -101,13 +105,30 @@ def validate_cal(config, val_loader, model, loss_function, output_dir, writer_di
                                     ground_truth)
             R_loss3 = loss_function(landmarks[2][:, config.TRANSFORMER.NUM_DECODER-1:config.TRANSFORMER.NUM_DECODER, :, :].detach(),
                                     ground_truth)
+            loss = 0.2 * R_loss1 + 0.3 * R_loss2 + 0.5 * R_loss3
+
+            feature_map = model.module.backbone(input.cuda())
+            calibration_feature_map = model.module.backbone(input_cal.cuda())
+
+            consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
+                                                           calibration_feature_map, calibration_landmarks, model.module,
+                                                           stage=1)
+            consistency_loss_2 = consistency_loss_function(landmarks[1], ground_truth, feature_map,
+                                                           calibration_feature_map, calibration_landmarks, model.module,
+                                                           stage=2)
+            consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
+                                                           calibration_feature_map, calibration_landmarks, model.module,
+                                                           stage=3)
+
+            loss += 1e3 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
             NME_stage1.update(R_loss1.item(), input.size(0))
             NME_stage2.update(R_loss2.item(), input.size(0))
             NME_stage3.update(R_loss3.item(), input.size(0))
 
-
-            loss = 0.2 * R_loss1 + 0.3 * R_loss2 + 0.5 * R_loss3
+            consistency_stage1.update(consistency_loss_1.item(), input.size(0))
+            consistency_stage2.update(consistency_loss_2.item(), input.size(0))
+            consistency_stage3.update(consistency_loss_3.item(), input.size(0))
 
             loss_average.update(loss.item(), input.size(0))
 
@@ -134,6 +155,9 @@ def validate_cal(config, val_loader, model, loss_function, output_dir, writer_di
                 writer.add_scalar('validate_NME1', NME_stage1.val, global_steps)
                 writer.add_scalar('validate_NME2', NME_stage2.val, global_steps)
                 writer.add_scalar('validate_NME3', NME_stage3.val, global_steps)
+                writer.add_scalar('validate_consistency1', consistency_stage1.val, global_steps)
+                writer.add_scalar('validate_consistency2', consistency_stage2.val, global_steps)
+                writer.add_scalar('validate_consistency3', consistency_stage3.val, global_steps)
                 writer_dict['train_global_steps'] = global_steps + 1
         msg = 'Stage1: ({NME_stage1.avg:.5f})\t' \
               'Stage2: ({NME_stage2.avg:.5f})\t' \

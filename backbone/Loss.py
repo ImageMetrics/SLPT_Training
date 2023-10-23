@@ -85,14 +85,12 @@ class L1_loss(nn.Module):
         return loss.mean()
 
 
-class AlignmentPlusConsistency_Loss(Alignment_Loss):
-    def __init__(self, cfg):
-        super().__init__(cfg)
-        self.consistency_weight = 100
+class Consistency_Loss(nn.Module):
+    def __init__(self):
+        super().__init__()
 
     def forward(self, input_tensor, ground_truth, feature_map, calibration_feature_map,
                 cal_landmarks, model, stage):
-        loss = super().forward(input_tensor, ground_truth)
         # consistency loss
 
         # calibration features
@@ -103,4 +101,4 @@ class AlignmentPlusConsistency_Loss(Alignment_Loss):
 
         loss_consistency = nn.functional.mse_loss(ROI_feature, ROI_feature_cal)
 
-        return loss + self.consistency_weight * loss_consistency
+        return loss_consistency

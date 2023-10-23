@@ -71,9 +71,9 @@ def main_function():
         'valid_global_steps': 0,
     }
 
-    # loss_function_2 = Alignment_Loss(cfg).cuda()
-    from backbone.Loss import AlignmentPlusConsistency_Loss
-    loss_function_2 = AlignmentPlusConsistency_Loss(cfg).cuda()
+    loss_function = Alignment_Loss(cfg).cuda()
+    from backbone.Loss import Consistency_Loss
+    consistency_loss_function = Consistency_Loss().cuda()
 
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -160,10 +160,10 @@ def main_function():
     )
 
     for epoch in range(begin_epoch, begin_epoch + cfg.TRAIN.NUM_EPOCH):
-        train_cal(cfg, train_loader, model, loss_function_2, optimizer, epoch,
+        train_cal(cfg, train_loader, model, loss_function, consistency_loss_function, optimizer, epoch,
               final_output_dir, writer_dict)
         perf_indicator = validate_cal(
-            cfg, valid_loader, model, loss_function_2, final_output_dir, writer_dict
+            cfg, valid_loader, model, loss_function, consistency_loss_function, final_output_dir, writer_dict
         )
 
         if perf_indicator <= best_perf:
