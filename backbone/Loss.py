@@ -83,3 +83,24 @@ class L1_loss(nn.Module):
         pred = pred.view(bs, num, point * 2)
         loss = (target - pred).abs()
         return loss.mean()
+
+
+class AlignmentPlusConsistency_Loss(Alignment_Loss):
+    def __init__(self, cfg):
+        super().__init__(cfg)
+        self.consistency_weight = 100
+
+    def forward(self, input_tensor, ground_truth, feature_map, calibration_feature_map,
+                cal_landmarks, model, stage):
+        loss = super().forward(input_tensor, ground_truth)
+        # consistency loss
+
+        # calibration features
+        ROI_feature_cal, _, _ = model.get_image_features(calibration_feature_map, cal_landmarks, stage=stage)
+
+        # landmark features
+        ROI_feature, _, _ = model.get_image_features(feature_map, input_tensor[:, -1, :, :], stage=stage)
+
+        loss_consistency = nn.functional.mse_loss(ROI_feature, ROI_feature_cal)
+
+        return loss + self.consistency_weight * loss_consistency

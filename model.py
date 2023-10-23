@@ -155,36 +155,15 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         calibration_feature_map = self.backbone(cal_image)
 
         # cal features
-        ROI_anchor_cal_1, bbox_size_cal_1, start_anchor_cal_1 = self.ROI_1(cal_landmarks.detach())
-        ROI_anchor_cal_1 = ROI_anchor_cal_1.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_cal_1 = self.interpolation(calibration_feature_map, ROI_anchor_cal_1.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                            self.Sample_num, self.d_model)
-        ROI_feature_cal_1 = ROI_feature_cal_1.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                     self.d_model).permute(0, 3, 2, 1)
-
-        ROI_anchor_cal_2, bbox_size_cal_2, start_anchor_cal_2 = self.ROI_2(cal_landmarks.detach())
-        ROI_anchor_cal_2 = ROI_anchor_cal_2.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_cal_2 = self.interpolation(calibration_feature_map, ROI_anchor_cal_2.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                            self.Sample_num, self.d_model)
-        ROI_feature_cal_2 = ROI_feature_cal_2.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                     self.d_model).permute(0, 3, 2, 1)
-
-        ROI_anchor_cal_3, bbox_size_cal_3, start_anchor_cal_3 = self.ROI_3(cal_landmarks.detach())
-        ROI_anchor_cal_3 = ROI_anchor_cal_3.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_cal_3 = self.interpolation(calibration_feature_map, ROI_anchor_cal_3.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                            self.Sample_num, self.d_model)
-        ROI_feature_cal_3 = ROI_feature_cal_3.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                     self.d_model).permute(0, 3, 2, 1)
+        ROI_feature_cal_1, _, _ = self.get_image_features(calibration_feature_map, cal_landmarks, stage=1)
+        ROI_feature_cal_2, _, _ = self.get_image_features(calibration_feature_map, cal_landmarks, stage=2)
+        ROI_feature_cal_3, _, _ = self.get_image_features(calibration_feature_map, cal_landmarks, stage=3)
 
         initial_landmarks = self.initial_points.repeat(bs, 1, 1).to(image.device)
 
         # stage_1
-        ROI_anchor_1, bbox_size_1, start_anchor_1 = self.ROI_1(initial_landmarks.detach())
-        ROI_anchor_1 = ROI_anchor_1.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_1 = self.interpolation(feature_map, ROI_anchor_1.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                            self.Sample_num, self.d_model)
-        ROI_feature_1 = ROI_feature_1.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                     self.d_model).permute(0, 3, 2, 1)
+        ROI_feature_1, bbox_size_1, start_anchor_1 = \
+            self.get_image_features(feature_map, initial_landmarks, stage=1)
 
         transformer_feature_1 = self.feature_extractor(ROI_feature_1).view(bs, self.num_point, self.d_model)
         transformer_feature_cal_1 = self.feature_extractor_cal(ROI_feature_cal_1).view(bs, self.num_point, self.d_model)
@@ -196,12 +175,8 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         output_list.append(landmarks_1)
 
         # stage_2
-        ROI_anchor_2, bbox_size_2, start_anchor_2 = self.ROI_2(landmarks_1[:, -1, :, :].detach())
-        ROI_anchor_2 = ROI_anchor_2.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_2 = self.interpolation(feature_map, ROI_anchor_2.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                                 self.Sample_num, self.d_model)
-        ROI_feature_2 = ROI_feature_2.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                           self.d_model).permute(0, 3, 2, 1)
+        ROI_feature_2, bbox_size_2, start_anchor_2 = \
+            self.get_image_features(feature_map, landmarks_1[:, -1, :, :], stage=2)
 
         transformer_feature_2 = self.feature_extractor(ROI_feature_2).view(bs, self.num_point, self.d_model)
         transformer_feature_cal_2 = self.feature_extractor_cal(ROI_feature_cal_2).view(bs, self.num_point, self.d_model)
@@ -213,12 +188,8 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         output_list.append(landmarks_2)
 
         # stage_3
-        ROI_anchor_3, bbox_size_3, start_anchor_3 = self.ROI_3(landmarks_2[:, -1, :, :].detach())
-        ROI_anchor_3 = ROI_anchor_3.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
-        ROI_feature_3= self.interpolation(feature_map, ROI_anchor_3.detach()).view(bs, self.num_point, self.Sample_num,
-                                                                                   self.Sample_num, self.d_model)
-        ROI_feature_3 = ROI_feature_3.view(bs * self.num_point, self.Sample_num, self.Sample_num,
-                                           self.d_model).permute(0, 3, 2, 1)
+        ROI_feature_3, bbox_size_3, start_anchor_3 = \
+            self.get_image_features(feature_map, landmarks_2[:, -1, :, :], stage=3)
 
         transformer_feature_3 = self.feature_extractor(ROI_feature_3).view(bs, self.num_point, self.d_model)
         transformer_feature_cal_3 = self.feature_extractor_cal(ROI_feature_cal_3).view(bs, self.num_point, self.d_model)
@@ -230,3 +201,34 @@ class Sparse_alignment_network_cal(Sparse_alignment_network):
         output_list.append(landmarks_3)
 
         return output_list
+
+    def get_image_features(self, feature_map, landmarks, stage=1):
+        bs = feature_map.size(0)
+
+        # features
+        if stage == 1:
+            ROI_anchor_1, bbox_size_1, start_anchor_1 = self.ROI_1(landmarks.detach())
+            ROI_anchor_1 = ROI_anchor_1.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
+            ROI_feature_1 = self.interpolation(feature_map, ROI_anchor_1.detach()).view(bs, self.num_point, self.Sample_num,
+                                                                                self.Sample_num, self.d_model)
+            ROI_feature_1 = ROI_feature_1.view(bs * self.num_point, self.Sample_num, self.Sample_num,
+                                         self.d_model).permute(0, 3, 2, 1)
+            return ROI_feature_1, bbox_size_1, start_anchor_1
+
+        elif stage == 2:
+            ROI_anchor_2, bbox_size_2, start_anchor_2 = self.ROI_2(landmarks.detach())
+            ROI_anchor_2 = ROI_anchor_2.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
+            ROI_feature_2 = self.interpolation(feature_map, ROI_anchor_2.detach()).view(bs, self.num_point, self.Sample_num,
+                                                                                self.Sample_num, self.d_model)
+            ROI_feature_2 = ROI_feature_2.view(bs * self.num_point, self.Sample_num, self.Sample_num,
+                                         self.d_model).permute(0, 3, 2, 1)
+            return ROI_feature_2, bbox_size_2, start_anchor_2
+        else:
+            ROI_anchor_3, bbox_size_3, start_anchor_3 = self.ROI_3(landmarks.detach())
+            ROI_anchor_3 = ROI_anchor_3.view(bs, self.num_point * self.Sample_num * self.Sample_num, 2)
+            ROI_feature_3 = self.interpolation(feature_map, ROI_anchor_3.detach()).view(bs, self.num_point, self.Sample_num,
+                                                                                self.Sample_num, self.d_model)
+            ROI_feature_3 = ROI_feature_3.view(bs * self.num_point, self.Sample_num, self.Sample_num,
+                                         self.d_model).permute(0, 3, 2, 1)
+
+            return ROI_feature_3, bbox_size_3, start_anchor_3

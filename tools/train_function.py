@@ -95,9 +95,15 @@ def train_cal(config, train_loader, model, loss_function, optimizer, epoch, outp
         calibration_points = meta_cal['Points'].cuda().float()
         landmarks = model(input, input_cal, calibration_points)
 
-        R_loss_1 = loss_function(landmarks[0], ground_truth)
-        R_loss_2 = loss_function(landmarks[1], ground_truth)
-        R_loss_3 = loss_function(landmarks[2], ground_truth)
+        feature_map = model.module.backbone(input.cuda())
+        calibration_feature_map = model.module.backbone(input_cal.cuda())
+
+        R_loss_1 = loss_function(landmarks[0], ground_truth, feature_map,
+                                 calibration_feature_map, calibration_points, model.module, stage=1)
+        R_loss_2 = loss_function(landmarks[1], ground_truth, feature_map,
+                                 calibration_feature_map, calibration_points, model.module, stage=2)
+        R_loss_3 = loss_function(landmarks[2], ground_truth, feature_map,
+                                 calibration_feature_map, calibration_points, model.module, stage=3)
 
         loss = 0.2 * R_loss_1 + 0.3 * R_loss_2 + 0.5 * R_loss_3
 

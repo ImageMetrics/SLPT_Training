@@ -71,7 +71,9 @@ def main_function():
         'valid_global_steps': 0,
     }
 
-    loss_function_2 = Alignment_Loss(cfg).cuda()
+    # loss_function_2 = Alignment_Loss(cfg).cuda()
+    from backbone.Loss import AlignmentPlusConsistency_Loss
+    loss_function_2 = AlignmentPlusConsistency_Loss(cfg).cuda()
 
     normalize = transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
