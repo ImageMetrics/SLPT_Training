@@ -120,7 +120,7 @@ def validate_cal(config, val_loader, model, loss_function, consistency_loss_func
                                                            calibration_feature_map, calibration_landmarks, model.module,
                                                            stage=3)
 
-            loss += 1e3 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
+            loss += 100 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
             NME_stage1.update(R_loss1.item(), input.size(0))
             NME_stage2.update(R_loss2.item(), input.size(0))

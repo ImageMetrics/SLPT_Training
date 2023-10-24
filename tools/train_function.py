@@ -100,8 +100,8 @@ def train_cal(config, train_loader, model, loss_function, consistency_loss_funct
         landmarks = model(input, input_cal, calibration_points)
 
         R_loss_1 = loss_function(landmarks[0], ground_truth)
-        R_loss_2 = loss_function(landmarks[1], ground_truth, feature_map)
-        R_loss_3 = loss_function(landmarks[2], ground_truth, feature_map)
+        R_loss_2 = loss_function(landmarks[1], ground_truth)
+        R_loss_3 = loss_function(landmarks[2], ground_truth)
 
         loss = 0.2 * R_loss_1 + 0.3 * R_loss_2 + 0.5 * R_loss_3
 
@@ -115,7 +115,7 @@ def train_cal(config, train_loader, model, loss_function, consistency_loss_funct
         consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
                                  calibration_feature_map, calibration_points, model.module, stage=3)
 
-        loss += 1e3 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
+        loss += 100 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
         optimizer.zero_grad()
         loss.backward()
