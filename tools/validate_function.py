@@ -107,9 +107,9 @@ def validate_cal(config, val_loader, model, loss_function, consistency_loss_func
                                     ground_truth)
             loss = 0.2 * R_loss1 + 0.3 * R_loss2 + 0.5 * R_loss3
 
-            feature_map = model.module.backbone(input.cuda())
-            calibration_feature_map = model.module.backbone(input_cal.cuda())
-
+            # feature_map = model.module.backbone(input.cuda())
+            # calibration_feature_map = model.module.backbone(input_cal.cuda())
+            #
             # consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
             #                                                calibration_feature_map, calibration_landmarks, model.module,
             #                                                stage=1)

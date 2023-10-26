@@ -105,9 +105,9 @@ def train_cal(config, train_loader, model, loss_function, consistency_loss_funct
 
         loss = 0.2 * R_loss_1 + 0.3 * R_loss_2 + 0.5 * R_loss_3
 
-        feature_map = model.module.backbone(input.cuda())
-        calibration_feature_map = model.module.backbone(input_cal.cuda())
-
+        # feature_map = model.module.backbone(input.cuda())
+        # calibration_feature_map = model.module.backbone(input_cal.cuda())
+        #
         # consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
         #                          calibration_feature_map, calibration_points, model.module, stage=1)
         # consistency_loss_2 = consistency_loss_function(landmarks[1], ground_truth, feature_map,
