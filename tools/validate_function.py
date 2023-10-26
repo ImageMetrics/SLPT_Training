@@ -110,25 +110,25 @@ def validate_cal(config, val_loader, model, loss_function, consistency_loss_func
             feature_map = model.module.backbone(input.cuda())
             calibration_feature_map = model.module.backbone(input_cal.cuda())
 
-            consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
-                                                           calibration_feature_map, calibration_landmarks, model.module,
-                                                           stage=1)
-            consistency_loss_2 = consistency_loss_function(landmarks[1], ground_truth, feature_map,
-                                                           calibration_feature_map, calibration_landmarks, model.module,
-                                                           stage=2)
-            consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
-                                                           calibration_feature_map, calibration_landmarks, model.module,
-                                                           stage=3)
-
-            loss += 100 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
+            # consistency_loss_1 = consistency_loss_function(landmarks[0], ground_truth, feature_map,
+            #                                                calibration_feature_map, calibration_landmarks, model.module,
+            #                                                stage=1)
+            # consistency_loss_2 = consistency_loss_function(landmarks[1], ground_truth, feature_map,
+            #                                                calibration_feature_map, calibration_landmarks, model.module,
+            #                                                stage=2)
+            # consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
+            #                                                calibration_feature_map, calibration_landmarks, model.module,
+            #                                                stage=3)
+            #
+            # loss += 100 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
             NME_stage1.update(R_loss1.item(), input.size(0))
             NME_stage2.update(R_loss2.item(), input.size(0))
             NME_stage3.update(R_loss3.item(), input.size(0))
 
-            consistency_stage1.update(consistency_loss_1.item(), input.size(0))
-            consistency_stage2.update(consistency_loss_2.item(), input.size(0))
-            consistency_stage3.update(consistency_loss_3.item(), input.size(0))
+            # consistency_stage1.update(consistency_loss_1.item(), input.size(0))
+            # consistency_stage2.update(consistency_loss_2.item(), input.size(0))
+            # consistency_stage3.update(consistency_loss_3.item(), input.size(0))
 
             loss_average.update(loss.item(), input.size(0))
 
@@ -155,9 +155,9 @@ def validate_cal(config, val_loader, model, loss_function, consistency_loss_func
                 writer.add_scalar('validate_NME1', NME_stage1.val, global_steps)
                 writer.add_scalar('validate_NME2', NME_stage2.val, global_steps)
                 writer.add_scalar('validate_NME3', NME_stage3.val, global_steps)
-                writer.add_scalar('validate_consistency1', consistency_stage1.val, global_steps)
-                writer.add_scalar('validate_consistency2', consistency_stage2.val, global_steps)
-                writer.add_scalar('validate_consistency3', consistency_stage3.val, global_steps)
+                # writer.add_scalar('validate_consistency1', consistency_stage1.val, global_steps)
+                # writer.add_scalar('validate_consistency2', consistency_stage2.val, global_steps)
+                # writer.add_scalar('validate_consistency3', consistency_stage3.val, global_steps)
                 writer_dict['train_global_steps'] = global_steps + 1
         msg = 'Stage1: ({NME_stage1.avg:.5f})\t' \
               'Stage2: ({NME_stage2.avg:.5f})\t' \

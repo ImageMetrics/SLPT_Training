@@ -201,7 +201,8 @@ class TransformerCal(Transformer):
                          num_decoder_layer=num_decoder_layer, dim_feedforward=dim_feedforward,
                          dropout=dropout, activation=activation, normalize_before=normalize_before)
         # calibration encoding
-        self.calibration_encoding = nn.Parameter(torch.randn(1, num_points, self.d_model))
+        self.calibration_encoding = nn.Parameter(torch.randn(1, 1, self.d_model))
+        self.frame_encoding = nn.Parameter(torch.randn(1, 1, self.d_model))
 
         # SLPT_Inherent_Layer = Inherent_Layer(d_model, nhead, dim_feedforward, dropout,
         #                                             activation, normalize_before)
@@ -214,14 +215,17 @@ class TransformerCal(Transformer):
         bs, num_feat, len_feat = src.size()
 
         structure_encoding = self.structure_encoding.repeat(bs, 1, 1).permute(1, 0, 2)
-        calibration_encoding = self.calibration_encoding.repeat(bs, 1, 1).permute(1, 0, 2)
+
+        calibration_encoding = structure_encoding + self.calibration_encoding.repeat(bs, num_feat, 1).permute(1, 0, 2)
+        frame_encoding = structure_encoding + self.frame_encoding.repeat(bs, num_feat, 1).permute(1, 0, 2)
+
         landmark_query = self.landmark_query.repeat(bs, 1, 1).permute(1, 0, 2)
 
         src = src.permute(1, 0, 2)
         cal = cal.permute(1, 0, 2)
 
         src_cal = torch.cat((src, cal), dim=0)
-        src_cal_encoding = torch.cat((structure_encoding, calibration_encoding), dim=0)
+        src_cal_encoding = torch.cat((frame_encoding, calibration_encoding), dim=0)
 
         tgt = torch.zeros_like(landmark_query)
         tgt = self.Transformer_block(tgt, src_cal,
