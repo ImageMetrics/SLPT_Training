@@ -36,12 +36,10 @@ class Sparse_alignment_network(nn.Module):
         self.initial_points.requires_grad = False
 
         # ROI_creator
-        # self.ROI_1 = get_roi(self.Sample_num, 8.0, 64)
-        # self.ROI_2 = get_roi(self.Sample_num, 4.0, 64)
-        # self.ROI_3 = get_roi(self.Sample_num, 2.0, 64)
-        self.ROI_1 = get_roi(self.Sample_num, 0, 64)
-        self.ROI_2 = get_roi(self.Sample_num, 0, 64)
-        self.ROI_3 = get_roi(self.Sample_num, 0, 64)
+        self.ROI_1 = get_roi(self.Sample_num, 8.0, 64)
+        self.ROI_2 = get_roi(self.Sample_num, 4.0, 64)
+        self.ROI_3 = get_roi(self.Sample_num, 2.0, 64)
+
         self.interpolation = interpolation_layer()
 
         # feature_extractor
