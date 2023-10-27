@@ -6,14 +6,9 @@ import numpy as np
 
 from Transformer import Transformer
 from Transformer import interpolation_layer
-from Transformer import _get_clones
 from Transformer import get_roi
 from backbone import get_face_alignment_net
-from backbone import Get_Hourglass
-from backbone import build_position_encoding
-from backbone import Backbone, feature_fusion
-from backbone import conv_1x1_bn
-from utils import decode_preds, get_initial_pred
+
 
 
 class Sparse_alignment_network(nn.Module):
