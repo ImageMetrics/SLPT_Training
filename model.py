@@ -233,10 +233,10 @@ class Sparse_alignment_network_refine(Sparse_alignment_network_cal):
     def __init__(self, *args):
         super().__init__(*args)
 
-        # ROI_creator - make these a lot tighter
-        self.ROI_1 = get_roi(self.Sample_num, 4.0, 64)
-        self.ROI_2 = get_roi(self.Sample_num, 2.0, 64)
-        self.ROI_3 = get_roi(self.Sample_num, 1.0, 64)
+        # # ROI_creator - make these a lot tighter
+        # self.ROI_1 = get_roi(self.Sample_num, 4.0, 64)
+        # self.ROI_2 = get_roi(self.Sample_num, 2.0, 64)
+        # self.ROI_3 = get_roi(self.Sample_num, 1.0, 64)
 
     def forward(self, image, start_landmarks, cal_image, cal_landmarks):
 
