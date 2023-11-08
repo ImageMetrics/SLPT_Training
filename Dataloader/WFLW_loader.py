@@ -81,6 +81,7 @@ class WFLW_Dataset(Dataset):
             temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
                                  max_index[1] - min_index[1]])
             temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
+            temp_name = temp_name.replace('\\', os.sep)
             Data_base.append({'Img': temp_name,
                               'bbox': temp_box,
                               'point': point_coord})
@@ -246,6 +247,7 @@ class WFLWCal_Dataset(WFLW_Dataset):
             temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
                                  max_index[1] - min_index[1]])
             temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
+            temp_name = temp_name.replace('\\', os.sep)
             Data_base.append({'Img': temp_name,
                               'bbox': temp_box,
                               'point': point_coord,})
@@ -270,6 +272,7 @@ class WFLWCal_Dataset(WFLW_Dataset):
             temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
                                  max_index[1] - min_index[1]])
             temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
+            temp_name = temp_name.replace('\\', os.sep)
             temp_point = []
             for i in range(2 * self.number_landmarks, 4 * self.number_landmarks):
                 temp_point.append(float(temp_info[i]))
