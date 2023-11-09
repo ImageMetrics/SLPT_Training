@@ -88,6 +88,14 @@ class L1_loss(nn.Module):
 class Consistency_Loss(nn.Module):
     def __init__(self):
         super().__init__()
+        # HEADCAMCAL
+        # BROW_INNER_LEFT: 0
+        # BROW_INNER_RIGHT: 2
+        # BROW_OUTER_LEFT: 14
+        # BROW_OUTER_RIGHT: 15
+        # NOSE_RIDGE_TIP: 72
+
+        self.feature_inds = [0, 2, 14, 15, 72]
 
     def forward(self, input_tensor, ground_truth, feature_map, calibration_feature_map,
                 cal_landmarks, model, stage):
@@ -99,6 +107,6 @@ class Consistency_Loss(nn.Module):
         # landmark features
         ROI_feature, _, _ = model.get_image_features(feature_map, input_tensor[:, -1, :, :], stage=stage)
 
-        loss_consistency = nn.functional.mse_loss(ROI_feature, ROI_feature_cal)
+        loss_consistency = nn.functional.mse_loss(ROI_feature[self.feature_inds, :, :, :], ROI_feature_cal[self.feature_inds, :, :, :])
 
         return loss_consistency
