@@ -201,7 +201,7 @@ def train_cal_refine(config, train_loader, model, loss_function, consistency_los
         consistency_loss_3 = consistency_loss_function(landmarks[2], ground_truth, feature_map,
                                  calibration_feature_map, calibration_points, model.module, stage=3)
 
-        loss += 1e3 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
+        loss += 1e2 * (0.2 * consistency_loss_1 + 0.3 * consistency_loss_2 + 0.5 * consistency_loss_3)
 
         optimizer.zero_grad()
         loss.backward()
