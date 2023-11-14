@@ -107,6 +107,6 @@ class Consistency_Loss(nn.Module):
         # landmark features
         ROI_feature, _, _ = model.get_image_features(feature_map, input_tensor[:, -1, :, :], stage=stage)
 
-        loss_consistency = nn.functional.mse_loss(ROI_feature[self.feature_inds, :, :, :], ROI_feature_cal[self.feature_inds, :, :, :])
+        loss_consistency = nn.functional.mse_loss(ROI_feature[self.feature_inds, :, 3, 3], ROI_feature_cal[self.feature_inds, :, 3, 3])
 
         return loss_consistency
