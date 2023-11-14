@@ -67,9 +67,9 @@ def main_function():
     if cfg.MODEL.INIT_ALL_WEIGHTS:
         checkpoint_file = os.path.join(args.modelDir, cfg.MODEL.INIT_ALL_WEIGHTS)
         checkpoint = torch.load(checkpoint_file)
-        pretrained_dict = {k: v for k, v in checkpoint.items()
-                           if k in model.state_dict().keys()}
-        model.load_state_dict(pretrained_dict)
+        pretrained_dict = {k[9:]: v for k, v in checkpoint.items()
+                           if k in model.state_dict().keys() and k.startswith('backbone.')}
+        model.backbone.load_state_dict(pretrained_dict)
 
     model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
 
