@@ -229,31 +229,6 @@ class WFLWCal_Dataset(WFLW_Dataset):
 
         self.calibration_database = self.get_calibration_file_information()
 
-    def get_calibration_file_information(self):
-        Data_base = []
-
-        with open(self.calibration_annotation_file) as f:
-            info_list = f.read().splitlines()
-            f.close()
-
-        for temp_info in info_list:
-            temp_point = []
-            temp_info = temp_info.split(' ')
-            for i in range(2 * self.number_landmarks):
-                temp_point.append(float(temp_info[i]))
-            point_coord = np.array(temp_point, dtype=np.float).reshape(self.number_landmarks, 2)
-            max_index = np.max(point_coord, axis=0)
-            min_index = np.min(point_coord, axis=0)
-            temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
-                                 max_index[1] - min_index[1]])
-            temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
-            temp_name = temp_name.replace('\\', os.sep)
-            Data_base.append({'Img': temp_name,
-                              'bbox': temp_box,
-                              'point': point_coord,})
-
-        return Data_base
-
     def get_file_information(self):
         Data_base = []
 
@@ -281,15 +256,50 @@ class WFLWCal_Dataset(WFLW_Dataset):
                               'bbox': temp_box,
                               'point': point_coord,
                               'start': start_coord,})
+        return Data_base
+
+    def get_calibration_file_information(self):
+        Data_base = []
+
+        with open(self.calibration_annotation_file) as f:
+            info_list = f.read().splitlines()
+            f.close()
+
+        for temp_info in info_list:
+            temp_point = []
+            temp_info = temp_info.split(' ')
+            for i in range(2 * self.number_landmarks):
+                temp_point.append(float(temp_info[i]))
+            point_coord = np.array(temp_point, dtype=np.float).reshape(self.number_landmarks, 2)
+            max_index = np.max(point_coord, axis=0)
+            min_index = np.min(point_coord, axis=0)
+            temp_box = np.array([min_index[0], min_index[1], max_index[0] - min_index[0],
+                                 max_index[1] - min_index[1]])
+            temp_name = os.path.join(self.root, self.image_dir, temp_info[-1])
+            temp_name = temp_name.replace('\\', os.sep)
+            Data_base.append({'Img': temp_name,
+                              'bbox': temp_box,
+                              'point': point_coord,})
 
         return Data_base
 
     def __getitem__(self, idx):
-        db_slic = copy.deepcopy(self.database[idx])
+        input, meta, Flip_Flag = self._get_item_internal(idx, self.database, self.is_train)
+        input_cal, meta_cal, _ = self._get_item_internal(idx, self.calibration_database, False,
+                                                      Flip_Flag=Flip_Flag)
+
+        return input, input_cal, meta, meta_cal
+
+    def _get_item_internal(self, idx, database, is_train,
+                           Flip_Flag=None):
+        db_slic = copy.deepcopy(database[idx])
         Img_path = db_slic['Img']
         BBox = db_slic['bbox']
         Points = db_slic['point']
-        StartPoints = db_slic['start']
+        if 'start' in db_slic:
+            StartPoints = db_slic['start']
+        else:
+            StartPoints = None
         Annotated_Points = Points.copy()
 
         Img = cv2.imread(Img_path)
@@ -304,7 +314,7 @@ class WFLWCal_Dataset(WFLW_Dataset):
             elif Img_shape[2] == 1:
                 Img = cv2.cvtColor(Img, cv2.COLOR_GRAY2RGB)
 
-        if self.is_train == True:
+        if is_train == True:
             Rotation_Factor = self.Rotation_Factor * np.pi / 180.0
             Scale_Factor = self.Scale_Factor
             Translation_X_Factor = self.Translation_Factor
@@ -322,8 +332,10 @@ class WFLWCal_Dataset(WFLW_Dataset):
 
             for i in range(self.number_landmarks):
                 Points[i,0:2] = utils.affine_transform(Points[i,0:2], trans)
-                StartPoints[i,0:2] = utils.affine_transform(StartPoints[i,0:2], trans)
+                if StartPoints is not None:
+                    StartPoints[i,0:2] = utils.affine_transform(StartPoints[i,0:2], trans)
 
+            Flip_Flag = 0
             if self.Flip is True:
                 Flip_Flag = np.random.randint(0, 2)
                 if Flip_Flag == 1:
@@ -342,13 +354,14 @@ class WFLWCal_Dataset(WFLW_Dataset):
                 input = self.Transform(input)
 
             meta = {'Img_path': Img_path,
-                    'Points': Points / (self.Image_size),
-                    'StartPoints': StartPoints / (self.Image_size),
+                    'Points': Points / self.Image_size,
                     'BBox': BBox,
                     'trans': trans,
                     'Scale': Scale,
                     'angle': angle,
                     'Translation': [Translation_X, Translation_Y]}
+            if StartPoints is not None:
+                meta['StartPoints'] = StartPoints / self.Image_size
 
         else:
             trans = utils.get_transforms(BBox, self.Fraction, 0.0, self.Image_size, shift_factor=[0.0, 0.0])
@@ -357,19 +370,24 @@ class WFLWCal_Dataset(WFLW_Dataset):
 
             for i in range(self.number_landmarks):
                 Points[i, 0:2] = utils.affine_transform(Points[i, 0:2], trans)
-                StartPoints[i, 0:2] = utils.affine_transform(StartPoints[i, 0:2], trans)
+                if StartPoints:
+                    StartPoints[i, 0:2] = utils.affine_transform(StartPoints[i, 0:2], trans)
+
+            if self.Flip is True and Flip_Flag == 1:
+                input, Points, StartPoints = self.Image_Flip(input, Points, StartPoints)
 
             meta = {
                 "Annotated_Points": Annotated_Points,
                 'Img_path': Img_path,
-                'Points': Points / (self.Image_size),
-                'StartPoints': StartPoints / (self.Image_size),
+                'Points': Points / self.Image_size,
                 'BBox': BBox,
                 'trans': trans,
                 'Scale': self.Fraction,
                 'angle': 0.0,
                 'Translation': [0.0, 0.0],
             }
+            if StartPoints is not None:
+                meta['StartPoints'] = StartPoints / self.Image_size
 
             # target = np.zeros((self.number_landmarks, self.Heatmap_size, self.Heatmap_size))
             # tpts = Points / (self.Image_size - 1) * (self.Heatmap_size - 1)
@@ -380,15 +398,7 @@ class WFLWCal_Dataset(WFLW_Dataset):
             if self.Transform is not None:
                 input = self.Transform(input)
 
-        tmp = self.database
-        is_train = self.is_train
-        self.database = self.calibration_database
-        self.is_train = False
-        input_cal, meta_cal = super().__getitem__(idx)
-        self.database = tmp
-        self.is_train = is_train
-
-        return input, input_cal, meta, meta_cal
+        return input, meta, Flip_Flag
 
     def Image_Flip(self, Img, GT, ST):
         Mirror_GT = []
@@ -396,6 +406,12 @@ class WFLWCal_Dataset(WFLW_Dataset):
         width = Img.shape[1]
         for i in self.flip_index:
             Mirror_GT.append([width - 1 - GT[i][0], GT[i][1]])
-            Mirror_ST.append([width - 1 - ST[i][0], ST[i][1]])
+            if ST is not None:
+                Mirror_ST.append([width - 1 - ST[i][0], ST[i][1]])
         Img = cv2.flip(Img, 1)
-        return Img, numpy.array(Mirror_GT), numpy.array(Mirror_ST)
+        if ST is not None:
+            Mirror_ST = numpy.array(Mirror_ST)
+        else:
+            Mirror_ST = None
+
+        return Img, numpy.array(Mirror_GT), Mirror_ST

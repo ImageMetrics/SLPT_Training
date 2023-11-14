@@ -1,7 +1,7 @@
 import argparse
 
-from Config.default_cal import _C as cfg
-from Config.default_cal import update_config
+from Config.default_cal_refine import _C as cfg
+from Config.default_cal_refine import update_config
 
 from utils import create_logger
 from utils import save_checkpoint
@@ -62,6 +62,14 @@ def main_function():
                                          cfg.TRANSFORMER.FEED_DIM, cfg.HEADCAMCAL.INITIAL_PATH, cfg)
     else:
         raise ValueError('Wrong Dataset')
+
+    # load weights
+    if cfg.MODEL.INIT_ALL_WEIGHTS:
+        checkpoint_file = os.path.join(args.modelDir, cfg.MODEL.INIT_ALL_WEIGHTS)
+        checkpoint = torch.load(checkpoint_file)
+        pretrained_dict = {k: v for k, v in checkpoint.items()
+                           if k in model.state_dict().keys()}
+        model.load_state_dict(pretrained_dict)
 
     model = torch.nn.DataParallel(model, device_ids=cfg.GPUS).cuda()
 
@@ -153,6 +161,10 @@ def main_function():
         optimizer.load_state_dict(checkpoint['optimizer'])
         logger.info("=> loaded checkpoint '{}' (epoch {})".format(
             checkpoint_file, checkpoint['epoch']))
+
+    # freeze HRNet
+    for param in model.module.backbone.parameters():
+        param.requires_grad = False
 
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, cfg.TRAIN.LR_STEP, cfg.TRAIN.LR_FACTOR,
