@@ -43,7 +43,7 @@ _C.MODEL.PRETRAINED = "./Config/hrnetv2_w18_imagenet_pretrained.pth"
 _C.MODEL.INIT_WEIGHTS = True
 _C.MODEL.HEATMAP = 64
 _C.MODEL.SAMPLE_NUM = 7
-_C.MODEL.INIT_ALL_WEIGHTS = 'HEADCAMCAL/Sparase_alignment/model_best.pth'
+_C.MODEL.INIT_ALL_WEIGHTS = 'HEADCAMCAL/train_cal/model_best.pth'
 
 _C.TRANSFORMER = CN()
 _C.TRANSFORMER.NHEAD = 8
