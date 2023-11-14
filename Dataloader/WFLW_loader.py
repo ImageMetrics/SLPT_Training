@@ -370,7 +370,7 @@ class WFLWCal_Dataset(WFLW_Dataset):
 
             for i in range(self.number_landmarks):
                 Points[i, 0:2] = utils.affine_transform(Points[i, 0:2], trans)
-                if StartPoints:
+                if StartPoints is not None:
                     StartPoints[i, 0:2] = utils.affine_transform(StartPoints[i, 0:2], trans)
 
             if self.Flip is True and Flip_Flag == 1:
